@@ -1,0 +1,108 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[{"apiVersion":"uiapi.com/v1alpha1","kind":"Uapi","metadata":{"name":"uapi"},"spec":{"api":{"conf_secret_name":"uapisecret","image":"docker.io/dimssss/upapi:latest","name":"uiapi","service_node_port":30081,"size":1},"db":{"host":"mongo","image":"registry.redhat.io/rhscl/mongodb-36-rhel7:latest","name":"uapi","port":27017},"namespace":"uapi","ui":{"api_url":"http://127.0.0.1:30081","image":"docker.io/dimssss/upapi-ui:latest","name":"ui","service_node_port":30080,"size":1}}}]'
+    capabilities: Basic Install
+  name: uapi-ansible-operator.v0.0.2
+  namespace: uapi
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - kind: Uapi
+      name: uapis.uiapi.com
+      version: v1alpha1
+      displayName: "bla"
+      description: "bla"
+  description: Placeholder description
+  displayName: Uapi Ansible Operator
+  install:
+    spec:
+      deployments:
+      - name: uapi-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: uapi-operator
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                name: uapi-operator
+            spec:
+              containers:
+              - env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: uapi-operator
+                image: docker.io/dimssss/uapi-operator:0.3
+                imagePullPolicy: Always
+                name: uapi-operator
+                resources: {}
+              serviceAccountName: uapi-operator
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          - endpoints
+          - persistentvolumeclaims
+          - events
+          - configmaps
+          - secrets
+          verbs:
+          - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          verbs:
+          - get
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - daemonsets
+          - replicasets
+          - statefulsets
+          verbs:
+          - '*'
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - uiapi.com
+          resources:
+          - '*'
+          verbs:
+          - '*'
+        serviceAccountName: uapi-operator
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: false
+    type: AllNamespaces
+  maturity: alpha
+  provider: {}
+  version: 0.0.2
+  replaces: uapi-ansible-operator.v0.0.1

@@ -1,0 +1,7 @@
+packageName: uapi
+channels:
+- name: alpha
+  currentCSV: uapioperator.v0.0.1
+- name: beta
+  currentCSV: uapioperator.v0.0.2
+defaultChannel: alpha
